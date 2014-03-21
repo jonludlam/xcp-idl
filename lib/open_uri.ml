@@ -15,6 +15,8 @@
  *
  *)
 
+open Re_fix
+
 let handle_socket f s =
   try
     let result = f s in

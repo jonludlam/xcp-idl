@@ -14,9 +14,11 @@
 
 (* Generic RPC marshalling functions for XCP services *)
 
+open Re_fix
+
 module Request = Cohttp.Request.Make(Cohttp_posix_io.Buffered_IO)
 module Response = Cohttp.Response.Make(Cohttp_posix_io.Buffered_IO)
-
+    
 let colon = Re_str.regexp "[:]"
 
 let get_user_agent () = Sys.argv.(0)
@@ -31,7 +33,7 @@ let switch_rpc queue_name string_of_call response_of_string =
 
 (* Use HTTP to frame RPC messages *)
 let http_rpc string_of_call response_of_string ?(srcstr="unset") ?(dststr="unset") url call =
-	let uri = Uri.of_string (url ()) in
+	let uri = exec "http_rpc: Uri.of_string" Uri.of_string (url ()) in
 	let req = string_of_call call in
 
 	let headers = Cohttp.Header.of_list [
@@ -42,7 +44,7 @@ let http_rpc string_of_call response_of_string ?(srcstr="unset") ?(dststr="unset
 	let userinfo = Uri.userinfo uri in
 	let headers = match userinfo with
 		| Some x ->
-			begin match Re_str.split_delim colon x with
+			begin match exec "http_rpc: split_delim" (fun () -> Re_str.split_delim colon x) () with
 			| username :: password :: [] ->
 				Cohttp.Header.add_authorization headers (Cohttp.Auth.Basic (username, password))
 			| _ -> headers

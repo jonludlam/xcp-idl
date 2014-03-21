@@ -12,6 +12,8 @@
  * GNU Lesser General Public License for more details.
  *)
 
+open Re_fix
+
 module StringSet = Set.Make(String)
 
 (* Server configuration. We have built-in (hopefully) sensible defaults,
@@ -220,11 +222,11 @@ let http_handler call_of_string string_of_response process s =
 	let oc = Unix.out_channel_of_descr s in
 	let module Request = Cohttp.Request.Make(Cohttp_posix_io.Buffered_IO) in
 	let module Response = Cohttp.Response.Make(Cohttp_posix_io.Buffered_IO) in
-	match Request.read ic with
+	match exec "http_handler: Request.read" Request.read ic with
 	| None ->
 		debug "Failed to read HTTP request"
 	| Some req ->
-		begin match Cohttp.Request.meth req, Uri.path (Cohttp.Request.uri req) with
+		begin match Cohttp.Request.meth req, Uri.path (Cohttp.Request.uri req)with
 		| `POST, _ ->
 			let headers = Cohttp.Request.headers req in
 			begin match Cohttp.Header.get headers "content-length" with

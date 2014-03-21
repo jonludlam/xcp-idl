@@ -15,6 +15,7 @@
  *
  *)
 
+open Re_fix
 
 module Unbuffered_IO = struct
   (** Use as few Unix.{read,write} calls as we can (for efficiency) without
@@ -84,7 +85,7 @@ module Unbuffered_IO = struct
   | Some buf, i when i < (String.length buf) ->
     begin
       try
-        let eol = Re_str.search_forward crlf buf i in
+        let eol = exec "Cohttp_posix_io.Unbuffered_IO - search forward" (fun () -> Re_str.search_forward crlf buf i) () in
         let line = String.sub buf i (eol - i) in
         ic.header_buffer_idx <- i + 4;
         Some line
