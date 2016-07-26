@@ -462,6 +462,16 @@ module Vif = struct
 
 	let default_locking_mode = Unlocked
 
+	module PVS_proxy = struct
+		type server = {
+			addresses: string list;
+			first_port: int;
+			last_port: int;
+		}
+		type interface = string
+		type t = (server list * interface)
+	end
+
 	type t = {
 		id: id;
 		position: int;
@@ -475,6 +485,7 @@ module Vif = struct
 		extra_private_keys: (string * string) list;
 		ipv4_configuration: ipv4_configuration;
 		ipv6_configuration: ipv6_configuration;
+		pvs_proxy: PVS_proxy.t option;
 	}
 
 	let default_t = {
@@ -490,6 +501,7 @@ module Vif = struct
 		extra_private_keys = [];
 		ipv4_configuration = default_ipv4_configuration;
 		ipv6_configuration = default_ipv6_configuration;
+		pvs_proxy = None;
 	}
 
 	let t_of_rpc rpc = Rpc.struct_extend rpc (rpc_of_t default_t) |> t_of_rpc
@@ -690,6 +702,7 @@ module VIF = struct
 	external set_locking_mode: debug_info -> Vif.id -> Vif.locking_mode -> Task.id = ""
 	external set_ipv4_configuration: debug_info -> Vif.id -> Vif.ipv4_configuration -> Task.id = ""
 	external set_ipv6_configuration: debug_info -> Vif.id -> Vif.ipv6_configuration -> Task.id = ""
+	external set_pvs_proxy: debug_info -> Vif.id -> Vif.PVS_proxy.t option -> Task.id = ""
 end
 
 module VGPU = struct
