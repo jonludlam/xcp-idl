@@ -63,7 +63,7 @@ let hostname = Cache.make
 let invalidate_hostname_cache () = Cache.invalidate hostname
 
 let get_thread_id () =
-    try Thread.id (Thread.self ()) with _ -> -1 
+    try Thread.id (Thread.self ()) with _ -> -1
 
 module ThreadLocalTable = struct
   type 'a t = {
@@ -83,7 +83,7 @@ module ThreadLocalTable = struct
   let remove t =
     let id = get_thread_id () in
     Mutex.execute t.m (fun () -> Hashtbl.remove t.tbl id)
- 
+
   let find t =
     let id = get_thread_id () in
     Mutex.execute t.m (fun () ->
@@ -117,7 +117,7 @@ let format include_time brand priority message =
     (if include_time then gettimestring () else "")
     priority host id name task brand message
 
-let print_debug = ref false
+let print_debug = ref true
 let log_to_stdout () = print_debug := true
 
 let loglevel_m = Mutex.create ()
@@ -139,9 +139,9 @@ let is_disabled brand level =
 let reset_levels () =
   Mutex.execute loglevel_m (fun () ->
     loglevel := default_loglevel;
-    Hashtbl.clear logging_disabled_for 
+    Hashtbl.clear logging_disabled_for
   )
-  
+
 
 let facility = ref Syslog.Daemon
 let facility_m = Mutex.create ()
@@ -196,7 +196,7 @@ let with_thread_named name f x =
     raise e
 
 module StringSet = Set.Make(struct type t=string let compare=Pervasives.compare end)
-let debug_keys = ref StringSet.empty 
+let debug_keys = ref StringSet.empty
 let get_all_debug_keys () =
 	StringSet.fold (fun key keys -> key::keys) !debug_keys []
 
@@ -255,7 +255,7 @@ end
 
 module Make = functor(Brand: BRAND) -> struct
   let _ =
-    Mutex.execute dkmutex (fun () -> 
+    Mutex.execute dkmutex (fun () ->
       debug_keys := StringSet.add Brand.name !debug_keys)
 
 	let output level priority (fmt: ('a, unit, string, 'b) format4) =
@@ -264,7 +264,7 @@ module Make = functor(Brand: BRAND) -> struct
 				if not(is_disabled Brand.name level)
 				then output_log Brand.name level priority s
 			) fmt
-    
+
 	let debug fmt = output Syslog.Debug "debug" fmt
 	let warn fmt = output Syslog.Warning "warn" fmt
 	let info fmt = output Syslog.Info "info" fmt
