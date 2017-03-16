@@ -105,7 +105,7 @@ type item = {
   fn: unit -> unit
 }
 
-let schedule = (Printf.printf "creating an empty schedule!\n%!"; ref Int64Map.empty)
+let schedule = ref Int64Map.empty
 let delay = Delay.make ()
 let next_id = ref 0
 let m = Mutex.create ()
@@ -149,11 +149,8 @@ let one_shot time (name: string) f =
            name = name;
            fn = f
          } in
-         Printf.printf "Adding to schedule. Cardinal=%d\n%!" (Int64Map.cardinal !schedule);
          schedule := Int64Map.add time (item :: existing) !schedule;
-         Printf.printf "Added to schedule. Cardinal=%d (next_id=%d)\n%!" (Int64Map.cardinal !schedule) !next_id;
          Delay.signal delay;
-         Thread.delay 20.0;
          id
       ) in
   (time, id)
@@ -173,7 +170,6 @@ let process_expired () =
   let expired =
     mutex_execute m
       (fun () ->
-         Printf.printf "process_expired: cardinal=%d\n%!" (Int64Map.cardinal !schedule);
          let expired, unexpired = Int64Map.partition (fun t' _ -> t' <= t) !schedule in
          schedule := unexpired;
          Int64Map.fold (fun _ stuff acc -> acc @ stuff) expired [] |> List.rev) in
@@ -183,7 +179,7 @@ let process_expired () =
        try
          i.fn ()
        with e ->
-         Printf.printf "Scheduler ignoring exception: %s\n%!" (Printexc.to_string e)
+         debug "Scheduler ignoring exception: %s\n%!" (Printexc.to_string e)
     ) expired;
   expired <> [] (* true if work was done *)
 
@@ -193,16 +189,12 @@ let rec main_loop () =
     mutex_execute m
       (fun () ->
          try
-           Printf.printf "main_loop: cardinal: %d next_id:%d\n%!" (Int64Map.cardinal !schedule) !next_id;
            Int64Map.min_binding !schedule |> fst
          with Not_found ->
-           Printf.printf  "Not found...!\n%!";
            Int64.add 3600L (now ())
       ) in
   let seconds = Int64.sub sleep_until (now ()) in
-  Printf.printf "main_loop: Scheduler sleep until %Ld (another %Ld seconds)\n%!" sleep_until seconds;
   let (_: bool) = Delay.wait delay (Int64.to_float seconds) in
-  Printf.printf "main_loop: Woken...\n%!";
   main_loop ()
 
 let start () =
