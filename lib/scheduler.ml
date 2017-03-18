@@ -12,10 +12,6 @@
  * GNU Lesser General Public License for more details.
  *)
 
-(*open Stdext
-open Pervasiveext
-open Threadext*)
-
 let finally f g =
   try
   	let result = f () in
