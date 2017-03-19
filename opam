@@ -24,7 +24,7 @@ depends: [ "uri"
            "rpc" {>= "1.5.3"}
            "ocamlfind"
            "cohttp" {>= "0.15.0" & < "0.22.0"}
-	   "mirage-clock-unix" {<= "1.0.0"}
+	   "mirage-clock-unix" {= "1.0.0"}
            "message-switch"
            "xapi-stdext"
            "xapi-rrd"
