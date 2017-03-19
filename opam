@@ -23,7 +23,8 @@ depends: [ "uri"
            "xmlm"
            "rpc" {>= "1.5.3"}
            "ocamlfind"
-           "cohttp" {>= "0.15.0"}
+           "cohttp" {>= "0.15.0" & < "0.22.0"}
+	   "mirage-clock" {<= "1.0.0"}
            "message-switch"
            "xapi-stdext"
            "xapi-rrd"
