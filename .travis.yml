@@ -7,6 +7,5 @@ env:
   global:
     - PACKAGE=xapi-idl
     - OCAML_VERSION=4.02
-    - TESTS=true
     - EXTRA_REMOTES=git://github.com/xapi-project/xs-opam
     - COV_CONF="ocaml setup.ml -configure --enable-tests"
