@@ -43,12 +43,14 @@ end
 
 module T = Task_server.Task(TestInterface)
 
+(* Test that we can add a task and retrieve it from the task list *)
 let test_add () =
   let t = T.empty () in
   let task = T.add t "dbg" (fun task -> Some "done") in
   let ts = T.list t in
   assert_bool "Task in task list" (List.mem task ts)
 
+(* Test that destroying a task removes it from the task list *)
 let test_destroy () =
   let t = T.empty () in
   let task = T.add t "dbg" (fun task -> Some "done") in
@@ -56,6 +58,9 @@ let test_destroy () =
   let ts = T.list t in
   assert_bool "Task not in task list" (not (List.mem task ts))
 
+(* Test 'running' a task, and that the various times associated with the
+   task make sense, and that the task status is correctly completed with
+   correct result *)
 let test_run () =
   let t = T.empty () in
   let start = Unix.gettimeofday () in
@@ -69,6 +74,8 @@ let test_run () =
        r = "done" && duration > 0.0
      | _ -> false)
 
+(* Test what happens when the function passed to the task server raises an
+   exception. The task result should be failed with the correct exception *)
 let test_raise () =
   Debug.disable "task_server";
   let t = T.empty () in
@@ -85,6 +92,8 @@ let test_raise () =
        end
      | _ -> false)
 
+(* Test cancellation of a task, in this case cancelled before the task is
+   run. The state should be 'failed' with exception 'cancelled' *)
 let test_cancel () =
   let t = T.empty () in
   let task = T.add t "dbg" (fun task -> T.check_cancelling task; Some "foo") in
@@ -100,6 +109,9 @@ let test_cancel () =
          with _ -> false end
      | _ -> false)
 
+(* Tests the 'with_cancel' function. Tests that the cancel function gets
+   run on cancellation. In this case, the cancellation happens before the
+   task is run *)
 let test_with_cancel () =
   let t = T.empty () in
   let cancel_fn_run = ref false in
@@ -118,6 +130,8 @@ let test_with_cancel () =
      | _ -> false);
   assert_bool "Cancel_fn run" !cancel_fn_run
 
+(* Tests what happens when the 'cancel' function passed to 'with_cancel' itself
+   fails. *)
 let test_with_cancel_failure () =
   let t = T.empty () in
   let task = T.add t "dbg"
@@ -134,6 +148,8 @@ let test_with_cancel_failure () =
          with _ -> false end
      | _ -> false)
 
+(* Similar to test_with_cancel, but in this case the cancellation function
+   is called after the task is started *)
 let test_with_cancel2 () =
   let t = T.empty () in
   let delay = Scheduler.Delay.make () in
@@ -159,6 +175,8 @@ let test_with_cancel2 () =
      | _ -> false);
   assert_bool "Cancel_fn run" !cancel_fn_run
 
+(* Similar to test_with_cancel_failure, but as above the cancel_fn is
+   called after the task has started *)
 let test_with_cancel_failure2 () =
   let t = T.empty () in
   let delay = Scheduler.Delay.make () in
@@ -183,6 +201,8 @@ let test_with_cancel_failure2 () =
          with _ -> false end
      | _ -> false)
 
+(* Check the 'subtask' functionality. Subtasks are logged in the task
+   record. *)
 let test_subtasks () =
   let t = T.empty () in
   let task = T.add t "dbg"
@@ -198,6 +218,9 @@ let test_subtasks () =
        r = "done"
      | _ -> false)
 
+(* Check what happens when subtasks fail. The whole task should be marked
+   as failed, and the individual task that caused the problem should be
+   marked as failed in the task record, with the correct exception. *)
 let test_subtasks_failure () =
   let t = T.empty () in
   let task = T.add t "dbg"
@@ -220,6 +243,9 @@ let test_subtasks_failure () =
        r |> TestInterface.Exception.exnty_of_rpc = TestInterface.Exception.Internal_error "foo"
      | _ -> false)
 
+(* Test the cancellation points functionality. In here, we ask for task 'dbg'
+   to be cancelled at the 5th time it checks for cancellation. Verify this
+   succeeds for the task specified, and doesn't for the other task *)
 let test_cancel_trigger () =
   let t = T.empty () in
   T.set_cancel_trigger t "dbg" 5;
